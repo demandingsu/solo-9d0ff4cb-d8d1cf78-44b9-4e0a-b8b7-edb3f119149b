@@ -32,3 +32,39 @@ class RunOut(BaseModel):
     error: str | None
     started_at: str
     finished_at: str
+
+
+class VerifyRequest(BaseModel):
+    original_code: str = Field(
+        ..., min_length=1, description="已采集的原公告编号（须存在于采集库中）"
+    )
+    catalog_url: str = Field(
+        ..., min_length=1, description="同站候选人公示目录列表页地址（服务自动跟随分页）"
+    )
+    winner_url: str = Field(
+        ..., min_length=1, description="拟发中标公告详情页地址"
+    )
+
+
+class SectionVerifyOut(BaseModel):
+    section_no: str
+    status: str = Field(
+        ..., description="match=一致；mismatch=不一致；undeterminable=无法判定"
+    )
+    announced_winner: str | None
+    expected_winner: str | None
+    reason: str
+    winner_source_url: str | None
+    candidate_source_urls: list[str]
+    disqualification_source_urls: list[str]
+
+
+class VerifyResponse(BaseModel):
+    status: str = Field(
+        ..., description="match=全部一致；mismatch=含不一致标段；undeterminable=无法整体判定"
+    )
+    original_code: str
+    winner_published_at: str
+    catalog_url: str
+    winner_url: str
+    sections: list[SectionVerifyOut]

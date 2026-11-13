@@ -19,6 +19,7 @@ services:
       - "8001:80"
     volumes:
       - ./demo_site:/usr/share/nginx/html:ro
+      - ./demo_site_verify:/usr/share/nginx/html/verify:ro
     restart: unless-stopped
 
 volumes:

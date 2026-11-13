@@ -5,4 +5,5 @@ __pycache__/
 data/
 *.db
 demo_site/
+demo_site_verify/
 tests/

@@ -5,8 +5,16 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query
 
 from . import database
-from .models import CollectRequest, CollectResponse, ProjectOut, RunOut
+from .models import (
+    CollectRequest,
+    CollectResponse,
+    ProjectOut,
+    RunOut,
+    VerifyRequest,
+    VerifyResponse,
+)
 from .service import ServiceError, query_projects, run_collection
+from .verify_service import VerifyServiceError, run_verification
 
 
 @asynccontextmanager
@@ -51,3 +59,17 @@ def list_projects() -> list[ProjectOut]:
 def list_collections(limit: int = Query(20, ge=1, le=200)) -> list[RunOut]:
     with database.get_conn() as conn:
         return [RunOut(**dict(r)) for r in database.fetch_runs(conn, limit)]
+
+
+@app.post("/api/verify-winner", response_model=VerifyResponse, status_code=200)
+def verify_winner_endpoint(req: VerifyRequest) -> VerifyResponse:
+    """核对拟发中标人是否仍为各标段首位有效候选人。
+
+    目录分页失败等源站可用性问题通过响应体内各标段 status=undeterminable
+    表达；输入本身不成立（原公告未采集、拟发详情不可读）返回 422。
+    """
+    try:
+        result = run_verification(req.original_code, req.catalog_url, req.winner_url)
+    except VerifyServiceError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return VerifyResponse(**result)
